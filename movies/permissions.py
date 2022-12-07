@@ -11,3 +11,14 @@ class AuthPermissions(permissions.BasePermission):
             return req._user.is_employee
         except:
             return False
+
+class TokenExistPermissions(permissions.BasePermission):
+    def has_permission(self, req: Request, view):
+
+        try:
+            if not req._auth:
+                return False
+
+            return True
+        except:
+            return False

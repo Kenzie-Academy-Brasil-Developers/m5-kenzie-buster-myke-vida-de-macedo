@@ -4,13 +4,11 @@ from rest_framework.views import APIView, Request
 from django.shortcuts import get_object_or_404
 
 from .models import Movie
-from .serializers import MovieSerializer
-from users.models import User
+from .serializers import MovieSerializer, MovieOrderSerializer
 
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from .permissions import AuthPermissions
+from .permissions import AuthPermissions, TokenExistPermissions
 
 class MovieView( APIView ):
 
@@ -58,3 +56,23 @@ class MovieIdView( APIView ):
         movie.delete()
 
         return Response(status=204)
+
+class MovieOrderIdView( APIView ):
+    
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [TokenExistPermissions]
+
+    def post( self, req: Request, movie_id: int ) -> Response:
+
+        get_object_or_404( Movie, id=movie_id)
+
+        req.data["movie"] = movie_id
+        req.data["user"] = req._user.id
+
+        movie_order = MovieOrderSerializer(data=req.data)
+
+        movie_order.is_valid(raise_exception=True)
+
+        movie_order.save()
+
+        return Response(movie_order.data, 201)
