@@ -10,7 +10,9 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .permissions import AuthPermissions, TokenExistPermissions
 
-class MovieView( APIView ):
+from api.pagination import CustomPagePagination
+
+class MovieView( APIView, CustomPagePagination ):
 
     authentication_classes = [JWTAuthentication]
     permission_classes = [AuthPermissions]
@@ -31,9 +33,11 @@ class MovieView( APIView ):
         
         movie = Movie.objects.all()
 
-        res_movies = MovieSerializer(movie, many=True)
+        result_page = self.paginate_queryset(movie, req, view=self)
 
-        return Response(res_movies.data,200)
+        res_movies = MovieSerializer(result_page, many=True)
+
+        return self.get_paginated_response(res_movies.data)
 
 
 class MovieIdView( APIView ):
